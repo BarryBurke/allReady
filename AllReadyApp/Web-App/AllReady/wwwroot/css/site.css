@@ -6,6 +6,10 @@
     padding-bottom: 16rem;
 }
 
+.logo-background {
+    background-color: #d58033;
+}
+
 /* Set widths on the form inputs since otherwise they're 100% wide */
 input,
 select,
@@ -115,6 +119,26 @@ ul.nav a:focus {
     text-decoration: underline;
 }
 
+ul.nav.nav-tabs > li > a:hover 
+{
+    /* issue 551 */
+    color: #000;
+}
+
+.nav-tabs > li > a, 
+.nav-tabs > li > a:hover, 
+.nav-tabs > li > a:focus {
+    text-decoration: none;
+}
+
+
+.nav-tabs > li.active > a, 
+.nav-tabs > li.active > a:hover, 
+.nav-tabs > li.active > a:focus {
+    /* prevent tab from losing bottom border */
+    border-bottom-color: #fff;
+}
+
 /*=========================
 Navigation
 ===========================*/
@@ -211,6 +235,15 @@ Navigation
 /* Login status */
 .navbar .login-status > li > a {
     font-size: 1.1em;
+}
+
+.navbar #logoutForm .user-profile-warning{
+    float:right;
+    line-height: 20px;
+    font-size: 1.1em;
+    margin-left: -7px;
+    margin-top: -7px;
+    opacity: 0.7;
 }
 
 .campaign-sponsor {
@@ -312,4 +345,12 @@ Navigation
 .thermometer-bulb-outline{
     stroke: black;
     stroke-width: 3;
-} 		 
+} 	
+
+.inline-form {
+    display: inline-block;
+}
+
+h2.inline-form {
+    padding-right: 10px;
+}

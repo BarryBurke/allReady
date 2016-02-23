@@ -63,6 +63,7 @@ namespace AllReady.Areas.Admin.Controllers
                 return HttpUnauthorized();
             }
 
+
             var activity = new ActivityDetailModel
             {
                 CampaignId = campaign.Id,
@@ -135,6 +136,7 @@ namespace AllReady.Areas.Admin.Controllers
         public IActionResult Edit(int id)
         {
             ActivityDetailModel activity = _bus.Send(new ActivityDetailQuery { ActivityId = id });
+
             if (activity == null)
             {
                 return HttpNotFound();
@@ -263,7 +265,7 @@ namespace AllReady.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult MessageAllVolunteers(MessageActivityVolunteersModel model)
+        public async Task<IActionResult> MessageAllVolunteers(MessageActivityVolunteersModel model)
         {
             //TODO: Query only for the organization Id rather than the whole activity detail
             if (!ModelState.IsValid)
@@ -282,7 +284,7 @@ namespace AllReady.Areas.Admin.Controllers
                 return HttpUnauthorized();
             }
 
-            _bus.Send(new MessageActivityVolunteersCommand { Model = model });
+            await _bus.SendAsync(new MessageActivityVolunteersCommand { Model = model });
             return Ok();
         }
 

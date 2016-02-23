@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -70,10 +70,10 @@
                     <a asp-controller="Home" asp-action="Index" class="navbar-brand"><img src="~/images/Web-Logo-small.png" alt="Web Logo" /></a>
                 </div>
                 <div class="navbar-collapse collapse">
-                    <ul class="nav navbar-nav">
-                        <li><a asp-controller="Home" asp-action="About">About</a></li>
+                    <ul class="nav navbar-nav">                        
                         <li><a asp-controller="Campaign" asp-action="Index">Campaigns</a></li>
                         <li><a asp-controller="Organization" asp-action="Index">Organizations</a></li>
+                        <li><a asp-controller="Home" asp-action="About">About</a></li>
                         @await Html.PartialAsync("_AdminNavigationPartial")
                     </ul>
                     @await Html.PartialAsync("_LoginPartial")
@@ -99,6 +99,7 @@
         <script src="~/lib/tinymce/tinymce.js"></script>
         <script src="~/lib/bootstrap-tagsinput/dist/bootstrap-tagsinput.js"></script>
         <script src="~/lib/d3/d3.js"></script>
+        <script src="~/lib/jquery.maskedinput/dist/jquery.maskedinput.js"></script>
     </environment>
     <environment names="Staging,Production">
         <script src="//ajax.aspnetcdn.com/ajax/jquery/jquery-2.1.4.min.js"
@@ -129,6 +130,10 @@
         <script src="//d3js.org/d3.v3.min.js"
                 asp-fallback-src="~/lib/d3/d3.js">
         </script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/jquery.maskedinput/1.4.1/jquery.maskedinput.min.js"
+                asp-fallback-src="~/lib/jquery.maskedinput/dist/jquery.maskedinput.js"
+                asp-fallback-test="window.jQuery && window.jQuery.fn && window.jQuery.fn.mask">
+        </script>
     </environment>
     <script src="~/lib/knockout-bootstrap/src/knockout-bootstrap.js"></script>
     <script src="~/lib/system.js/dist/system.js"></script>
@@ -156,8 +161,11 @@
 							"insertdatetime media table contextmenu paste imagetools"
                 ],
                 toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist | link image",
-                autosave_ask_before_unload: false });
+                autosave_ask_before_unload: false
+            });
         });
+
+
     </script>
     @RenderSection("scripts", required: false)
 </body>

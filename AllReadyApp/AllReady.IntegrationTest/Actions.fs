@@ -9,8 +9,8 @@ let GoToHomePage baseUrl =
 
 let Login userName password baseUrl =
     GoToHomePage baseUrl
-    click "Log in"
+    click ".log-in"
     "input#Email" << userName
     "input#Password" << password
     click "#login-submit"
-    "a[title='Manage']" == ("Hello " + userName + "!")
+    "a[title='Manage']" == ("Hello " + userName)

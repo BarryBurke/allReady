@@ -9,7 +9,7 @@ using Microsoft.Extensions.OptionsModel;
 
 namespace AllReady.Features.Notifications
 {
-    public class NotifyAdminForActivitySignup : INotificationHandler<VolunteerInformationAdded>
+    public class NotifyAdminForActivitySignup : IAsyncNotificationHandler<VolunteerInformationAdded>
     {
         private readonly AllReadyContext _context;
         private readonly IMediator _bus;
@@ -22,18 +22,21 @@ namespace AllReady.Features.Notifications
             _options = options;
         }
 
-        public void Handle(VolunteerInformationAdded notification)
+        public async Task Handle(VolunteerInformationAdded notification)
         {
             var volunteer = _context.Users.Single(u => u.Id == notification.UserId);
             var activity = _context.Activities.Single(a => a.Id == notification.ActivityId);
             var campaign = _context.Campaigns
-                .Include(c => c.Organizer)
+                .Include(c => c.CampaignContacts).ThenInclude(cc => cc.Contact)
                 .Single(c => c.Id == activity.CampaignId);
             var link = $"View activity: http://{_options.Value.SiteBaseUrl}/Admin/Activity/Details/{activity.Id}";
 
             var subject = $"A volunteer has signed up for {activity.Name}";
 
-            if (campaign.Organizer != null)
+            var campaignContact = campaign.CampaignContacts?.SingleOrDefault(tc => tc.ContactType == (int)ContactTypes.Primary);
+            var adminEmail = campaignContact?.Contact.Email;
+
+            if (!string.IsNullOrWhiteSpace(adminEmail))
             {
                 var message = $"Your {campaign.Name} campaign activity '{activity.Name}' has a new volunteer. {volunteer.UserName} can be reached at {volunteer.Email}. {link}";
                 var command = new NotifyVolunteersCommand
@@ -42,12 +45,12 @@ namespace AllReady.Features.Notifications
                     {
                         EmailMessage = message,
                         HtmlMessage = message,
-                        EmailRecipients = new List<string> { campaign.Organizer.Email },
+                        EmailRecipients = new List<string> { adminEmail },
                         Subject = subject
                     }
                 };
 
-                _bus.Send(command);
+                await _bus.SendAsync(command).ConfigureAwait(false);
             }
         }
     }

@@ -21,6 +21,8 @@ namespace AllReady.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<int>("ActivityType");
+
                     b.Property<int>("CampaignId");
 
                     b.Property<string>("Description");
@@ -127,6 +129,8 @@ namespace AllReady.Migrations
 
                     b.Property<string>("PasswordHash");
 
+                    b.Property<string>("PendingNewEmail");
+
                     b.Property<string>("PhoneNumber");
 
                     b.Property<bool>("PhoneNumberConfirmed");
@@ -168,6 +172,8 @@ namespace AllReady.Migrations
                     b.Property<string>("ImageUrl");
 
                     b.Property<int?>("LocationId");
+
+                    b.Property<bool>("Locked");
 
                     b.Property<int>("ManagingOrganizationId");
 
@@ -223,6 +229,19 @@ namespace AllReady.Migrations
                     b.Property<int?>("OrganizationId");
 
                     b.HasKey("Id");
+                });
+
+            modelBuilder.Entity("AllReady.Models.ClosestLocation", b =>
+                {
+                    b.Property<string>("PostalCode");
+
+                    b.Property<string>("City");
+
+                    b.Property<double>("Distance");
+
+                    b.Property<string>("State");
+
+                    b.HasKey("PostalCode");
                 });
 
             modelBuilder.Entity("AllReady.Models.Contact", b =>
@@ -302,6 +321,15 @@ namespace AllReady.Migrations
                     b.Property<string>("State");
 
                     b.HasKey("PostalCode");
+                });
+
+            modelBuilder.Entity("AllReady.Models.PostalCodeGeoCoordinate", b =>
+                {
+                    b.Property<double>("Latitude");
+
+                    b.Property<double>("Longitude");
+
+                    b.HasKey("Latitude", "Longitude");
                 });
 
             modelBuilder.Entity("AllReady.Models.Resource", b =>
