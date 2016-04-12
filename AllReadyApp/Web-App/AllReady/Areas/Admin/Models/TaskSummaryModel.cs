@@ -1,10 +1,13 @@
-﻿using System;
+﻿using AllReady.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace AllReady.Areas.Admin.Models
 {
+    
+
     public class TaskSummaryModel
     {
         public int Id { get; set; }
@@ -29,12 +32,16 @@ namespace AllReady.Areas.Admin.Models
         public bool IsUserSignedUpForTask { get; set; }
 
         [Display(Name = "Volunteers Required")]
+        [Range(1, int.MaxValue, ErrorMessage = "'Volunteers Required' must be greater than 0")]
         public int NumberOfVolunteersRequired { get; set; }
 
         public List<VolunteerModel> AssignedVolunteers { get; set; } = new List<VolunteerModel>();
 
         public List<VolunteerModel> AllVolunteers { get; set; } = new List<VolunteerModel>();
 
-        public int AcceptedVolunteerCount => AssignedVolunteers?.Where(v => v.HasVolunteered).Count() ?? 0;
+        public List<TaskSkill> RequiredSkills { get; set; } = new List<TaskSkill>();
+
+        public int AcceptedVolunteerCount => AssignedVolunteers?.Count(v => v.HasVolunteered) ?? 0;
+        public int NumberOfVolunteersSignedUp => AssignedVolunteers.Count;
     }
 }

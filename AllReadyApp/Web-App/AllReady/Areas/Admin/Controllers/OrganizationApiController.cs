@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNet.Mvc;
-using AllReady.Areas.Admin.Models;
-using MediatR;
-using AllReady.Models;
+﻿using System.Threading.Tasks;
 using AllReady.Areas.Admin.Features.Organizations;
+using AllReady.Areas.Admin.Models;
+using AllReady.Models;
+using MediatR;
 using Microsoft.AspNet.Authorization;
+using Microsoft.AspNet.Mvc;
 
 namespace AllReady.Areas.Admin.Controllers
 {
@@ -14,19 +15,19 @@ namespace AllReady.Areas.Admin.Controllers
 
     public class OrganizationApiController : Controller
     {
-        private readonly IMediator _bus;
+        private readonly IMediator _mediator;
 
-        public OrganizationApiController(IMediator bus)
+        public OrganizationApiController(IMediator mediator)
         {
-            _bus = bus;
+            _mediator = mediator;
         }
 
         // GET api/values/5/Contact
         [HttpGet("{id}/Contact")]
         [Produces("application/json", Type = typeof(ContactInformationModel))]
-        public ContactInformationModel GetContact(int id)
+        public async Task<ContactInformationModel> GetContact(int id)
         {
-            var contact = _bus.Send(new OrganizationContactQuery  { Id = id, ContactType = ContactTypes.Primary });
+            var contact = await _mediator.SendAsync(new OrganizationContactQueryAsync { OrganizationId = id, ContactType = ContactTypes.Primary });
             return contact;
         }
     }

@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Data.Entity;
 
 namespace AllReady.Models
@@ -49,7 +47,7 @@ namespace AllReady.Models
                 _dbContext.TaskSignups.Remove(taskSignup);
                 return _dbContext.SaveChangesAsync();
             }
-            return null;
+            return Task.FromResult(0);
         }
 
         Task IAllReadyDataAccess.UpdateTaskSignupAsync(TaskSignup value)

@@ -8,19 +8,33 @@ using AllReady.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using AllReady.Areas.Admin.Features.Tasks;
+using AllReady.Extensions;
+using AllReady.Features.Activity;
+using AllReady.Features.Notifications;
+using AllReady.Features.Tasks;
+using MediatR;
+using Microsoft.AspNet.Authorization;
+using TaskStatus = AllReady.Areas.Admin.Features.Tasks.TaskStatus;
 
 namespace AllReady.Controllers
 {
+
     [Route("api/task")]
     [Produces("application/json")]
     public class TaskApiController : Controller
     {
         private readonly IAllReadyDataAccess _allReadyDataAccess;
+        private readonly IMediator _mediator;
 
-        public TaskApiController(IAllReadyDataAccess allReadyDataAccess)
+
+        public TaskApiController(IAllReadyDataAccess allReadyDataAccess, IMediator mediator)
         {
             _allReadyDataAccess = allReadyDataAccess;
+            _mediator = mediator;
         }
 
         private bool HasTaskEditPermissions(AllReadyTask task)
@@ -37,12 +51,12 @@ namespace AllReady.Controllers
                 return true;
             }
 
-            if (task.Activity != null && task.Activity.Organizer != null && task.Activity.Organizer.Id == userId)
+            if (task.Activity?.Organizer != null && task.Activity.Organizer.Id == userId)
             {
                 return true;
             }
 
-            if (task.Activity != null && task.Activity.Campaign != null && task.Activity.Campaign.Organizer != null && task.Activity.Campaign.Organizer.Id == userId)
+            if (task.Activity?.Campaign != null && task.Activity.Campaign.Organizer != null && task.Activity.Campaign.Organizer.Id == userId)
             {
                 return true;
             }
@@ -59,7 +73,7 @@ namespace AllReady.Controllers
             else
             {
                 var userId = User.GetUserId();                
-                if (task.AssignedVolunteers != null && task.AssignedVolunteers.FirstOrDefault(x => x.User.Id == userId) != null)
+                if (task.AssignedVolunteers?.FirstOrDefault(x => x.User.Id == userId) != null)
                 {
                     return true;
                 }
@@ -134,33 +148,45 @@ namespace AllReady.Controllers
             }
         }
 
-        [HttpGet]
-        [Route("/Signup/{taskId}")]
-        [Produces("application/json", Type = typeof(TaskViewModel))]
-        public async void Signup(int taskId, string userId = "")
+        [ValidateAntiForgeryToken]
+        [HttpPost("signup")]
+        [Authorize]
+        [Produces("application/json")]
+        public async Task<object> RegisterTask(ActivitySignupViewModel signupModel)
         {
-            var task = _allReadyDataAccess.GetTask(taskId);
-
-            if (task == null)
+            if (signupModel == null)
             {
-                HttpNotFound();
+                return HttpBadRequest();
             }
 
-            ApplicationUser user = _allReadyDataAccess.GetUser(User.GetUserId());
-
-            if (task.AssignedVolunteers == null)
+            if (!ModelState.IsValid)
             {
-                task.AssignedVolunteers = new List<TaskSignup>();
+                // this condition should never be hit because client side validation is being performed
+                // but just to cover the bases, if this does happen send the erros to the client
+                return Json(new { errors = ModelState.GetErrorMessages() });
             }
 
-            task.AssignedVolunteers.Add(new TaskSignup
-            {
-                Task = task,
-                User = user,
-                StatusDateTimeUtc = DateTime.UtcNow
-            });
+            var result = await _mediator.SendAsync(new TaskSignupCommand() { TaskSignupModel = signupModel });
+            return new {Status = result.Status, Task = (result.Task == null) ? null : new TaskViewModel(result.Task, signupModel.UserId)};
+        }
 
-            await _allReadyDataAccess.UpdateTaskAsync(task);
+        [HttpDelete("{id}/signup")]
+        [Authorize]
+        public async Task<object> UnregisterTask(int id)
+        {
+            var userId = User.GetUserId();
+            var result = await _mediator.SendAsync(new TaskUnenrollCommand() { TaskId = id, UserId = userId});
+            return new { Status = result.Status, Task = (result.Task == null) ? null : new TaskViewModel(result.Task, userId) };
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("changestatus")]
+        [Authorize]
+        public async Task<object> ChangeStatus(TaskChangeModel model)
+        {
+            var result = await _mediator.SendAsync(new TaskStatusChangeCommand { TaskStatus = model.Status, TaskId = model.TaskId, UserId = model.UserId, TaskStatusDescription = model.StatusDescription });
+            return new { Status = result.Status, Task = (result.Task == null) ? null : new TaskViewModel(result.Task, model.UserId) };
         }
     }
 }

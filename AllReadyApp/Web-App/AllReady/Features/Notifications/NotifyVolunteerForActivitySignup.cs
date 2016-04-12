@@ -1,41 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AllReady.Areas.Admin.Features.Activities;
-using AllReady.Features.Login;
-using AllReady.Models;
 using MediatR;
 using Microsoft.Extensions.OptionsModel;
 
 namespace AllReady.Features.Notifications
 {
-    public class NotifyVolunteerForActivitySignup : IAsyncNotificationHandler<VolunteerInformationAdded>
+    public class NotifyVolunteerForActivitySignup : IAsyncNotificationHandler<VolunteerSignupNotification>
     {
-        private readonly IMediator _bus;
+        private readonly IMediator _mediator;
         private readonly IOptions<GeneralSettings> _options;
 
-        public NotifyVolunteerForActivitySignup(IMediator bus, IOptions<GeneralSettings> options)
+        public NotifyVolunteerForActivitySignup(IMediator mediator, IOptions<GeneralSettings> options)
         {
-            _bus = bus;
+            _mediator = mediator;
             _options = options;
         }
 
-        public async Task Handle(VolunteerInformationAdded notification)
+        public async Task Handle(VolunteerSignupNotification notification)
         {
-            var model = _bus.Send(new ActivityDetailForNotificationQuery {ActivityId = notification.ActivityId});
+            var model = await _mediator.SendAsync(new ActivityDetailForNotificationQueryAsync {ActivityId = notification.ActivityId, UserId = notification.UserId})
+                .ConfigureAwait(false);
 
             var signup = model.UsersSignedUp?.FirstOrDefault(s => s.User.Id == notification.UserId);
             if (signup == null)
+            {
                 return;
+            }
 
             var emailRecipient = !string.IsNullOrWhiteSpace(signup.PreferredEmail)
                 ? signup.PreferredEmail
                 : signup.User?.Email;
 
             if (string.IsNullOrWhiteSpace(emailRecipient))
+            {
                 return;
+            }
 
             var activityLink = $"View activity: {_options.Value.SiteBaseUrl}Admin/Activity/Details/{model.ActivityId}";
             var subject = "allReady Activity Enrollment Confirmation";
@@ -59,7 +60,7 @@ namespace AllReady.Features.Notifications
                 }
             };
 
-            await _bus.SendAsync(command).ConfigureAwait(false);
+            await _mediator.SendAsync(command).ConfigureAwait(false);
         }
     }
 }

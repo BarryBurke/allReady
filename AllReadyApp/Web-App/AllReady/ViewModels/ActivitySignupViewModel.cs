@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AllReady.ViewModels
 {
     public class ActivitySignupViewModel
     {
         public int ActivityId { get; set; }
+        public int TaskId { get; set; }
         public string UserId { get; set; }
         public string Name { get; set; }
         [Display(Name = "Contact email")]

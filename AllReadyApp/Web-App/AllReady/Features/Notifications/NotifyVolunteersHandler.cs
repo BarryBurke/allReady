@@ -1,10 +1,8 @@
 ﻿using System.Threading.Tasks;
-using AllReady.Models;
 using AllReady.Models.Notifications;
 using AllReady.Services;
 using MediatR;
 using Newtonsoft.Json;
-using RestSharp;
 
 namespace AllReady.Features.Notifications
 {
@@ -44,7 +42,6 @@ namespace AllReady.Features.Notifications
                 var email = JsonConvert.SerializeObject(queuedEmail);
                 await _storageService.SendMessageAsync(QueueStorageService.Queues.EmailQueue, email);
             }
-
         }
     }
 }

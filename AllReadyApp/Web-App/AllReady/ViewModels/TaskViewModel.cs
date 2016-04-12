@@ -1,9 +1,8 @@
-﻿using AllReady.Models;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using AllReady.Models;
 
 namespace AllReady.ViewModels
 {
@@ -42,7 +41,7 @@ namespace AllReady.ViewModels
                 ActivityName = task.Activity.Name;
             }
 
-            if (task.Activity != null && task.Activity.Campaign != null)
+            if (task.Activity?.Campaign != null)
             {
                 CampaignId = task.Activity.Campaign.Id;
                 CampaignName = task.Activity.Campaign.Name;
@@ -74,9 +73,16 @@ namespace AllReady.ViewModels
             if (task.RequiredSkills != null)
             {
                 this.RequiredSkills = task.RequiredSkills.Select(t => t.SkillId);
+                RequiredSkillObjects = task.RequiredSkills?.Select(t => t.Skill).ToList();
             }
 
+            NumberOfVolunteersRequired = task.NumberOfVolunteersRequired;
+            NumberOfUsersSignedUp = task.NumberOfUsersSignedUp;
+            IsLimitVolunteers = task.IsLimitVolunteers;
+            IsAllowWaitList = task.IsAllowWaitList;
+
         }
+
 
         public int Id { get; set; }
         public bool IsNew { get; set; }
@@ -100,10 +106,12 @@ namespace AllReady.ViewModels
         public string CampaignName { get; set; }
 
         public int OrganizationId { get; set; }
+        public int NumberOfVolunteersRequired { get; set; }
         public string OrganizationName { get; set; }
 
         [Display(Name = "Required Skills")]
         public IEnumerable<int> RequiredSkills { get; set; } = new List<int>();
+        public List<Skill> RequiredSkillObjects { get; set; } = new List<Skill>();
 
         [Display(Name = "Starting time")]
         public DateTimeOffset? StartDateTime { get; set; }
@@ -115,6 +123,24 @@ namespace AllReady.ViewModels
         public List<TaskSignupViewModel> AssignedVolunteers { get; set; } = new List<TaskSignupViewModel>();
 
         public int AcceptedVolunteerCount => AssignedVolunteers?.Where(v => v.Status == "Accepted").Count() ?? 0;
+        public bool IsLimitVolunteers { get; set; } = true;
+        public bool IsAllowWaitList { get; set; } = true;
+        public int NumberOfUsersSignedUp { get; set; }
+        public bool IsFull => NumberOfUsersSignedUp >= NumberOfVolunteersRequired;
+        public bool IsAllowSignups => !IsLimitVolunteers || !IsFull || IsAllowWaitList;
+        public string DisplayDateTime => GetDisplayDate();
+        public string VolunteerLimitDisplay => $"Volunteer Limit: {NumberOfVolunteersRequired}, Spots Remaining: {NumberOfVolunteersRequired - NumberOfUsersSignedUp}";
+
+        private string GetDisplayDate()
+        {
+            if (StartDateTime == null) return "Dates not specified";
+            if (EndDateTime == null) return $"{StartDateTime:dddd, MMMM dd, yyyy} at {StartDateTime:t}";
+            if (StartDateTime.Value.Date == EndDateTime.Value.Date)
+            {
+                return $"{StartDateTime:dddd, MMMM dd, yyyy} from {StartDateTime:t} - {EndDateTime:t}";
+            }
+            return $"{StartDateTime:dddd, MMMM dd, yyyy} at {StartDateTime:t} to<br>{EndDateTime:dddd, MMMM dd, yyyy} at {EndDateTime:t}";
+        }
 
         public TaskViewModel(AllReadyTask task, bool isUserSignedupForTask)
             : this(task)

@@ -45,15 +45,15 @@ footer, footer a {
     color: #ab6627;
 }
 
-footer a:hover {
-    text-decoration: none;
-    color: #efab6c;
-}
+    footer a:hover {
+        text-decoration: none;
+        color: #efab6c;
+    }
 
-footer > p > img, footer > p > a > img {
-    margin-left: 10px;
-    margin-right: 10px;
-}
+    footer > p > img, footer > p > a > img {
+        margin-left: 10px;
+        margin-right: 10px;
+    }
 
 footer {
     position: absolute;
@@ -92,7 +92,9 @@ footer {
     width: 100%;
     height: 100%;
     font-weight: bold;
-    font-size: 20px;
+    font-size: 22px;
+    padding: 17px 12px;
+    line-height: 1.3333333;
 }
 
 .navbar {
@@ -119,21 +121,20 @@ ul.nav a:focus {
     text-decoration: underline;
 }
 
-ul.nav.nav-tabs > li > a:hover 
-{
-    /* issue 551 */
+.nav-tabs > li > a:hover,
+.nav-tabs > li > a:focus {
     color: #000;
 }
 
-.nav-tabs > li > a, 
-.nav-tabs > li > a:hover, 
+.nav-tabs > li > a,
+.nav-tabs > li > a:hover,
 .nav-tabs > li > a:focus {
     text-decoration: none;
 }
 
 
-.nav-tabs > li.active > a, 
-.nav-tabs > li.active > a:hover, 
+.nav-tabs > li.active > a,
+.nav-tabs > li.active > a:hover,
 .nav-tabs > li.active > a:focus {
     /* prevent tab from losing bottom border */
     border-bottom-color: #fff;
@@ -158,18 +159,32 @@ Navigation
         font-size: 1.5em;
     }
 
-.navbar-default .navbar-nav > li > a, .navbar-default .navbar-nav > li > a:active, .navbar-default .navbar-nav > li > a:visited, .navbar-default .navbar-nav > li > a:focus {
+.navbar-default .navbar-nav > li > a,
+.navbar-default .navbar-nav > li > a:active,
+.navbar-default .navbar-nav > li > a:visited,
+.navbar-default .navbar-nav > li > a:focus {
     color: #fff;
 }
 
-.navbar-default .navbar-nav > li:hover, .navbar-default .navbar-nav > li:active, .navbar-default .navbar-nav > li:focus {
+.navbar-default .navbar-nav > li:hover,
+.navbar-default .navbar-nav > li:active,
+.navbar-default .navbar-nav > li:focus {
     background-color: #ab6627;
 }
 
-.navbar-default .navbar-nav > li > a:hover, .navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:hover, .navbar-default .navbar-nav > .active > a:focus {
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
     background: none;
     color: #fff;
     text-decoration: none;
+}
+
+.navbar-default .navbar-nav > li.active > a,
+.navbar-default .navbar-nav > li.active > a:hover,
+.navbar-default .navbar-nav > li.active > a:focus {
+    font-weight: bold;
 }
 /* Navbar toggle button */
 .navbar-default .navbar-toggle, .navbar .navbar-toggle {
@@ -224,12 +239,19 @@ Navigation
     background-color: #ab6627;
 }
 
-    .dropdown-admin > .dropdown-menu > li > a, .dropdown-admin > .dropdown-menu > li > a:hover, .dropdown-admin > .dropdown-menu > li > a:focus {
+    .dropdown-admin > .dropdown-menu > li > a,
+    .dropdown-admin > .dropdown-menu > li > a:hover,
+    .dropdown-admin > .dropdown-menu > li > a:focus {
         color: #fff;
         text-decoration: none;
     }
 
-    .dropdown-admin > .dropdown-menu > li:hover, .dropdown-admin > .dropdown-menu > li:focus {
+    .dropdown-admin > .dropdown-menu > li.active > a {
+        font-weight: bold;
+    }
+
+    .dropdown-admin > .dropdown-menu > li:hover,
+    .dropdown-admin > .dropdown-menu > li:focus {
         background-color: #d58033;
     }
 /* Login status */
@@ -237,8 +259,8 @@ Navigation
     font-size: 1.1em;
 }
 
-.navbar #logoutForm .user-profile-warning{
-    float:right;
+.navbar #logoutForm .user-profile-warning {
+    float: right;
     line-height: 20px;
     font-size: 1.1em;
     margin-left: -7px;
@@ -286,7 +308,7 @@ Navigation
 }
 
 .unvolunteer {
-    width: 100%;
+    width: 55%;
     text-align: center;
     font-size: 9.5pt;
 }
@@ -310,20 +332,20 @@ Navigation
 }
 
 /* version information */
-.version{
+.version {
     position: absolute;
     bottom: 0;
     right: 0;
     font-size: 9px;
 }
 
-.thermometer{
+.thermometer {
     margin-left: auto;
     margin-right: auto;
     display: block;
 }
 
-.thermometer-liquid{
+.thermometer-liquid {
     fill: #d32828;
 }
 
@@ -333,24 +355,132 @@ Navigation
     shape-rendering: crispEdges;
 }
 
-.thermometer-ticks text {
-    display: none;
-}
+    .thermometer-ticks text {
+        display: none;
+    }
+
 .thermometer-left-edge {
     stroke: black;
 }
+
 .thermometer-right-edge {
     stroke: black;
 }
-.thermometer-bulb-outline{
+
+.thermometer-bulb-outline {
     stroke: black;
     stroke-width: 3;
-} 	
+}
+
+/* Activity Details Page */
+#ActivityDetail h3 {
+    margin-top: 10px;
+}
+
+.no-matching-tasks {
+    font-size: 15px;
+}
+
+#CampaignInfo .panel-heading {
+    width: 215px;
+    float: left;
+}
+
+#CampaignInfo .toggle-accordion-icon {
+    width: 25px;
+    float: left;
+    margin-top: 25px;
+    margin-left: -39px;   
+}
+
+.task-panel .panel-title {
+    font-size: 14px;
+    margin-left: -10px;
+}
+
+.task-panel .panel-title .toggle-accordion-icon, #CampaignInfo .toggle-accordion-icon
+{
+    width: 25px;
+    float: left;
+    font-size: 24px;
+    color: hsl(28.6, 62.9%, 41.2%);
+}
+
+#CampaignInfo .toggle-accordion-icon {
+    margin-top: 7px;
+}
+
+#CampaignInfo .panel-heading {
+    background-color: white;
+}
+
+#CampaignInfo h3 {
+    margin-top: 1px;
+}
+
+[data-toggle-accordion] {
+    cursor: pointer;
+}
+
+.task-panel .panel-heading {
+    background: #DFDED6 no-repeat top left;
+}
+
+.task-panel .panel-body {
+    background: #E9E6E3 repeat-y top;
+}
+
+.task-panel .task-name {
+    font-weight: bold;
+}
+.task-panel .task-name.isFull {
+    font-weight: normal;
+}
+
+.task-panel .task-datetime {
+    font-size: 13px;
+}
+
+.task-panel .task-skills-container {
+}
+
+.task-panel .btn-group {
+    float: right;
+    margin-top: -32px;
+}
+
+.task-panel .btn-group > .btn {
+    margin-top: -3px;
+}
+
+.task-panel .btn-group > .btn-sm {
+    margin-top: -2px;
+}
+
+.task-list {
+    width: 80%;
+}
+
+#TasksAccordion .task-panel .task-button-container {
+    width: 34%;
+    margin: 0 auto;
+}
+
+#UserTasksAccordion .task-panel .task-button-container {
+    width: 84%;
+    margin: 0 auto;
+}
+
+#UserTasksAccordion .task-panel .task-button-container.twoButtons {
+    width: 46%;
+    margin: 0 auto;
+}
+
+/* Activity Edit Page */
+#IsLimitVolunteers, #IsAllowWaitList {
+    margin-left: -170px;
+}
 
 .inline-form {
     display: inline-block;
-}
-
-h2.inline-form {
-    padding-right: 10px;
 }

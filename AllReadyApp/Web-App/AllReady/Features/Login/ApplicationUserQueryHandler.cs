@@ -1,7 +1,7 @@
-﻿using AllReady.Models;
+﻿using System.Threading.Tasks;
+using AllReady.Models;
 using MediatR;
 using Microsoft.Data.Entity;
-using System.Threading.Tasks;
 
 namespace AllReady.Features.Login
 {
@@ -21,7 +21,8 @@ namespace AllReady.Features.Login
                 .AsNoTracking()
                 .Include(a => a.Claims)
                 .Include(a => a.Roles)
-                .SingleOrDefaultAsync(a => a.NormalizedUserName == normalizedUserName);
+                .SingleOrDefaultAsync(a => a.NormalizedUserName == normalizedUserName)
+                .ConfigureAwait(false);
              return user;
         }
     }

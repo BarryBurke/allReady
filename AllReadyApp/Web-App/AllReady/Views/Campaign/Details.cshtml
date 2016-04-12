@@ -26,6 +26,7 @@
             <time value="Model.StartDate" format="D"></time> - <time value="Model.EndDate" format="D"></time>
             <em><time-zone-name time-zone-id="@Model.TimeZoneId"></time-zone-name></em>
         </p>
+        <p>@Model.LocationSummary</p>
     </div>
 </div>
 
@@ -106,6 +107,7 @@
                 <tr>
                     <th><span title="Name of the activity">Title</span></th>
                     <th><span title="Description of the activity">Description</span></th>
+                    <th><span title="Activity Location">Location</span></th>
                     <th><span title="Date of the activity">Dates</span></th>
                 </tr>
                 <!-- ko foreach: activities.filtered -->
@@ -117,6 +119,9 @@
                         <span data-bind="text: Description"></span>
                     </td>
                     <td>
+                        <span data-bind="text: Location ? Location.Summary : '' "></span>
+                    </td>
+                    <td>
                         <span data-bind="text: displayDate()"></span>
                     </td>
                 </tr>
@@ -126,7 +131,6 @@
         </div>
     </div>
 </div>
-
 
 <div class="row">
     <div class="col-sm-12" data-bind="if: resources && resources.length > 0">
@@ -140,6 +144,15 @@
         </div>
     </div>
 </div>
+
+@if (Model.HasPrivacyPolicy)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <p class="text-center"><a asp-controller="Organization" asp-action="OrganizationPrivacyPolicy" asp-route-id="@Model.ManagingOrganizationId">@Model.ManagingOrganizationName Privacy Policy</a></p>
+        </div>
+    </div>
+}
 
 @section scripts {
     <script>

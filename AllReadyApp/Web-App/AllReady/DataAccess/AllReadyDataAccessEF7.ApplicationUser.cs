@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Data.Entity;
 
 namespace AllReady.Models
@@ -19,6 +17,7 @@ namespace AllReady.Models
                     .ToList();
             }
         }
+
         ApplicationUser IAllReadyDataAccess.GetUser(string userId)
         {
             return _dbContext.Users
@@ -42,7 +41,7 @@ namespace AllReady.Models
                 _dbContext.Users.Remove(toDelete);
                 return _dbContext.SaveChangesAsync();
             }
-            return null;
+            return Task.FromResult(0);
         }
 
         Task IAllReadyDataAccess.UpdateUser(ApplicationUser value)

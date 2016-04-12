@@ -1,20 +1,20 @@
-﻿using Microsoft.AspNet.Authorization;
-using Microsoft.AspNet.Http;
-using Microsoft.AspNet.Mvc;
-
-using AllReady.Security;
-using AllReady.Models;
-using AllReady.Services;
-using AllReady.ViewModels;
-
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
-using MediatR;
-using AllReady.Areas.Admin.Models;
-using System;
 using AllReady.Areas.Admin.Features.Activities;
 using AllReady.Areas.Admin.Features.Campaigns;
+using AllReady.Areas.Admin.Features.Shared;
+using AllReady.Areas.Admin.Models;
 using AllReady.Extensions;
+using AllReady.Models;
+using AllReady.Security;
+using AllReady.Services;
+using AllReady.ViewModels;
+using MediatR;
+using Microsoft.AspNet.Authorization;
+using Microsoft.AspNet.Http;
+using Microsoft.AspNet.Mvc;
+using AllReady.Areas.Admin.Models.Validators;
 
 namespace AllReady.Areas.Admin.Controllers
 {
@@ -24,13 +24,13 @@ namespace AllReady.Areas.Admin.Controllers
     {
         private readonly IAllReadyDataAccess _dataAccess;
         private readonly IImageService _imageService;
-        private readonly IMediator _bus;
+        private readonly IMediator _mediator;
 
-        public ActivityController(IAllReadyDataAccess dataAccess, IImageService imageService, IMediator bus)
+        public ActivityController(IAllReadyDataAccess dataAccess, IImageService imageService, IMediator mediator)
         {
             _dataAccess = dataAccess;
             _imageService = imageService;
-            _bus = bus;
+            _mediator = mediator;
         }
 
         // GET: Activity/Details/5
@@ -38,7 +38,7 @@ namespace AllReady.Areas.Admin.Controllers
         [Route("Admin/Activity/Details/{id}")]
         public IActionResult Details(int id)
         {
-            var activity = _bus.Send(new ActivityDetailQuery { ActivityId = id });
+            var activity = _mediator.Send(new ActivityDetailQuery { ActivityId = id });
 
             if (activity == null)
             {
@@ -55,14 +55,13 @@ namespace AllReady.Areas.Admin.Controllers
 
         // GET: Activity/Create
         [Route("Admin/Activity/Create/{campaignId}")]
-        public IActionResult Create(int campaignId)
+        public async Task<IActionResult> Create(int campaignId)
         {
-            CampaignSummaryModel campaign = _bus.Send(new CampaignSummaryQuery { CampaignId = campaignId });
+            var campaign = await _mediator.SendAsync(new CampaignSummaryQuery { CampaignId = campaignId });
             if (campaign == null || !User.IsOrganizationAdmin(campaign.OrganizationId))
             {
                 return HttpUnauthorized();
             }
-
 
             var activity = new ActivityDetailModel
             {
@@ -74,6 +73,7 @@ namespace AllReady.Areas.Admin.Controllers
                 StartDateTime = DateTime.Today.Date,
                 EndDateTime = DateTime.Today.Date.AddMonths(1)
             };
+
             return View("Edit", activity);
         }
 
@@ -83,29 +83,20 @@ namespace AllReady.Areas.Admin.Controllers
         [Route("Admin/Activity/Create/{campaignId}")]
         public async Task<IActionResult> Create(int campaignId, ActivityDetailModel activity, IFormFile fileUpload)
         {
-            if (activity.EndDateTime < activity.StartDateTime)
-            {
-                ModelState.AddModelError(nameof(activity.EndDateTime), "End date cannot be earlier than the start date");
-            }
-
-                CampaignSummaryModel campaign = _bus.Send(new CampaignSummaryQuery { CampaignId = campaignId });
-                if (campaign == null ||
-                    !User.IsOrganizationAdmin(campaign.OrganizationId))
+            CampaignSummaryModel campaign = await _mediator.SendAsync(new CampaignSummaryQuery { CampaignId = campaignId });
+            if (campaign == null ||
+                !User.IsOrganizationAdmin(campaign.OrganizationId))
                 {
                     return HttpUnauthorized();
                 }
 
-            if (activity.StartDateTime < campaign.StartDate)
-            {
-                ModelState.AddModelError(nameof(activity.StartDateTime), "Start date cannot be earlier than the campaign start date " + campaign.StartDate.ToString("d"));
-            }
+            var validator = new ActivityDetailModelValidator(_mediator);
+            var errors = await validator.Validate(activity, campaign);
+            errors.ToList().ForEach(e => ModelState.AddModelError(e.Key, e.Value));
 
-            if (activity.EndDateTime > campaign.EndDate)
-            {
-                ModelState.AddModelError(nameof(activity.EndDateTime), "End date cannot be later than the campaign end date " + campaign.EndDate.ToString("d"));
-            }
-
-            if (ModelState.IsValid)
+            //TryValidateModel is called explictly because of MVC 6 behavior that supresses model state validation during model binding when binding to an IFormFile.
+            //See #619.
+            if (ModelState.IsValid && TryValidateModel(activity))
             {
                 if (fileUpload != null)
                 {
@@ -117,25 +108,26 @@ namespace AllReady.Areas.Admin.Controllers
                 }
 
                 activity.OrganizationId = campaign.OrganizationId;
-                var id = _bus.Send(new EditActivityCommand { Activity = activity });
+                var id = _mediator.Send(new EditActivityCommand { Activity = activity });
 
                 if (fileUpload != null)
                 {
-                    // resave now that activty has the ImageUrl
+                    // resave now that activity has the ImageUrl
                     activity.Id = id;
                     activity.ImageUrl = await _imageService.UploadActivityImageAsync(campaign.OrganizationId, id, fileUpload);
-                    _bus.Send(new EditActivityCommand { Activity = activity });
+                    _mediator.Send(new EditActivityCommand { Activity = activity });
                 }
 
                 return RedirectToAction("Details", "Activity", new { area = "Admin", id = id });
             }
+
             return View("Edit", activity);
         }
 
         // GET: Activity/Edit/5
         public IActionResult Edit(int id)
         {
-            ActivityDetailModel activity = _bus.Send(new ActivityDetailQuery { ActivityId = id });
+            ActivityDetailModel activity = _mediator.Send(new ActivityDetailQuery { ActivityId = id });
 
             if (activity == null)
             {
@@ -159,29 +151,19 @@ namespace AllReady.Areas.Admin.Controllers
             {
                 return HttpBadRequest();
             }
+            
             //TODO: Use the query pattern here
-            int organizationId = _dataAccess.GetManagingOrganizationId(activity.Id);
+            var organizationId = _dataAccess.GetManagingOrganizationId(activity.Id);
             if (!User.IsOrganizationAdmin(organizationId))
             {
                 return HttpUnauthorized();
             }
 
-            if (activity.EndDateTime < activity.StartDateTime)
-            {
-                ModelState.AddModelError(nameof(activity.EndDateTime), "End date cannot be earlier than the start date");
-            }
+            CampaignSummaryModel campaign = await _mediator.SendAsync(new CampaignSummaryQuery { CampaignId = activity.CampaignId });
 
-            CampaignSummaryModel campaign = _bus.Send(new CampaignSummaryQuery { CampaignId = activity.CampaignId });
-
-            if (activity.StartDateTime < campaign.StartDate)
-            {
-                ModelState.AddModelError(nameof(activity.StartDateTime), "Start date cannot be earlier than the campaign start date " + campaign.StartDate.ToString("d"));
-            }
-
-            if (activity.EndDateTime > campaign.EndDate)
-            {
-                ModelState.AddModelError(nameof(activity.EndDateTime), "End date cannot be later than the campaign end date " + campaign.EndDate.ToString("d"));
-            }
+            var validator = new ActivityDetailModelValidator(_mediator);
+            var errors = await validator.Validate(activity, campaign);
+            errors.ForEach(e => ModelState.AddModelError(e.Key, e.Value));
 
             if (ModelState.IsValid)
             {
@@ -198,7 +180,7 @@ namespace AllReady.Areas.Admin.Controllers
                     }
                 }
                 
-                var id = _bus.Send(new EditActivityCommand { Activity = activity });
+                var id = _mediator.Send(new EditActivityCommand { Activity = activity });
                 return RedirectToAction("Details", "Activity", new { area = "Admin", id = id });
             }
             return View(activity);
@@ -208,7 +190,7 @@ namespace AllReady.Areas.Admin.Controllers
         [ActionName("Delete")]
         public IActionResult Delete(int id)
         {
-            var activity = _bus.Send(new ActivityDetailQuery { ActivityId = id });
+            var activity = _mediator.Send(new ActivityDetailQuery { ActivityId = id });
             if (activity == null)
             {
                 return HttpNotFound();
@@ -228,7 +210,7 @@ namespace AllReady.Areas.Admin.Controllers
         public IActionResult DeleteConfirmed(System.Int32 id)
         {
             //TODO: Should be using an ActivitySummaryQuery here
-            ActivityDetailModel activity = _bus.Send(new ActivityDetailQuery { ActivityId = id });
+            ActivityDetailModel activity = _mediator.Send(new ActivityDetailQuery { ActivityId = id });
             if (activity == null)
             {
                 return HttpNotFound();
@@ -237,7 +219,7 @@ namespace AllReady.Areas.Admin.Controllers
             {
                 return HttpUnauthorized();
             }
-            _bus.Send(new DeleteActivityCommand { ActivityId = id });
+            _mediator.Send(new DeleteActivityCommand { ActivityId = id });
             return RedirectToAction("Details", "Campaign", new { area = "Admin", id = activity.CampaignId });
         }
 
@@ -273,7 +255,7 @@ namespace AllReady.Areas.Admin.Controllers
                 return HttpBadRequest(ModelState);
             }
 
-            var activity = _bus.Send(new ActivityDetailQuery { ActivityId = model.ActivityId });
+            var activity = _mediator.Send(new ActivityDetailQuery { ActivityId = model.ActivityId });
             if (activity == null)
             {
                 return HttpNotFound();
@@ -284,7 +266,7 @@ namespace AllReady.Areas.Admin.Controllers
                 return HttpUnauthorized();
             }
 
-            await _bus.SendAsync(new MessageActivityVolunteersCommand { Model = model });
+            await _mediator.SendAsync(new MessageActivityVolunteersCommand { Model = model });
             return Ok();
         }
 
@@ -300,16 +282,5 @@ namespace AllReady.Areas.Admin.Controllers
 
             return RedirectToRoute(new { controller = "Activity", Area = "Admin", action = "Edit", id = id });
         }
-
-        private bool UserIsOrganizationAdminOfActivity(Activity activity)
-        {
-            return User.IsOrganizationAdmin(activity.Campaign.ManagingOrganizationId);
-        }
-
-        private bool UserIsOrganizationAdminOfActivity(int activityId)
-        {
-            return UserIsOrganizationAdminOfActivity(_dataAccess.GetActivity(activityId));
-        }
-
     }
 }

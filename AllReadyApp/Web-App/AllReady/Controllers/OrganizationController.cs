@@ -1,32 +1,23 @@
-﻿using Microsoft.AspNet.Mvc;
-using AllReady.Models;
-using AllReady.ViewModels;
-using System.Linq;
-using MediatR;
-using System;
+﻿using System.Threading.Tasks;
 using AllReady.Features.Organizations;
-using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNet.Mvc;
 
 namespace AllReady.Controllers
 {
     public class OrganizationController : Controller
     {
-        private readonly IMediator _bus;
-        IAllReadyDataAccess _dataAccess;
+        private readonly IMediator _mediator;
 
-        public OrganizationController(IMediator bus, IAllReadyDataAccess dataAccess)
+        public OrganizationController(IMediator mediator)
         {
-            if (bus == null)
-                throw new ArgumentNullException(nameof(bus));
-
-            _bus = bus;
-            _dataAccess = dataAccess;
+            _mediator = mediator;
         }
 
         [Route("Organizations/")]
         public IActionResult Index()
         {
-            return View(_dataAccess.Organziations.Select(t => new OrganizationViewModel(t)).ToList());
+            return View(_mediator.Send(new OrganizationsQuery()));
         }
 
         [Route("Organization/{id}/")]
@@ -34,17 +25,35 @@ namespace AllReady.Controllers
         {
             if (id <= 0)
             { 
-                return HttpNotFound();
-            }            
+                return HttpBadRequest();
+            }
 
-            OrganizationViewModel model = await _bus.SendAsync(new OrganizationDetailsQueryAsync { Id = id });
+            var model = await _mediator.SendAsync(new OrganizationDetailsQueryAsync { Id = id });
 
             if (model == null)
-            {
+            { 
                 return HttpNotFound();
             }
 
             return View("Organization", model);
+        }
+
+        [Route("Organization/{id}/PrivacyPolicy")]
+        public async Task<IActionResult> OrganizationPrivacyPolicy(int id)
+        {
+            if (id <= 0)
+            { 
+                return HttpBadRequest();
+            }
+
+            var model = await _mediator.SendAsync(new OrganziationPrivacyPolicyQueryAsync { OrganizationId = id });
+            
+            if (model == null || string.IsNullOrEmpty(model.Content))
+            { 
+                return RedirectToAction(nameof(ShowOrganization));
+            }
+
+            return View("OrgPrivacyPolicy", model);
         }
     }
 }

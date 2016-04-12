@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNet.Identity;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace AllReady.Models
@@ -32,7 +29,7 @@ namespace AllReady.Models
 
         #region Organization CRUD
 
-        IEnumerable<Organization> Organziations { get; }
+        IEnumerable<Organization> Organizations { get; }
         Organization GetOrganization(int organizationId);
         Task AddOrganization(Organization value);
         Task DeleteOrganization(int id);
@@ -62,7 +59,7 @@ namespace AllReady.Models
 
         Task AddActivitySignupAsync(ActivitySignup userSignup);
 
-        Task DeleteActivitySignupAsync(int activitySignupId);
+        Task DeleteActivityAndTaskSignupsAsync(int activitySignupId);
 
         Task UpdateActivitySignupAsync(ActivitySignup value);
 

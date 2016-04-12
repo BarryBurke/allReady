@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using AllReady.Models;
 
 namespace AllReady.Areas.Admin.Models
@@ -47,6 +45,15 @@ namespace AllReady.Areas.Admin.Models
         public DateTimeOffset StartDateTime { get; set; }
         [Display(Name = "End Date")]
         public DateTimeOffset EndDateTime { get; set; }
+        [Display(Name = "Enforce Volunteer Limit")]
+        public bool IsLimitVolunteers { get; set; } = true;
+
+        [Display(Name = "Allow Wait List")]
+        public List<ActivitySignup> UsersSignedUp { get; set; } = new List<ActivitySignup>();
+        public bool IsAllowWaitList { get; set; } = true;
+        public int NumberOfUsersSignedUp => UsersSignedUp.Count;
+        public bool IsFull => NumberOfUsersSignedUp >= NumberOfVolunteersRequired;
+        public bool IsAllowSignups => !IsLimitVolunteers || !IsFull || IsAllowWaitList;
 
     }
 }

@@ -31,6 +31,10 @@ namespace AllReady.Migrations
 
                     b.Property<string>("ImageUrl");
 
+                    b.Property<bool>("IsAllowWaitList");
+
+                    b.Property<bool>("IsLimitVolunteers");
+
                     b.Property<int?>("LocationId");
 
                     b.Property<string>("Name")
@@ -86,6 +90,10 @@ namespace AllReady.Migrations
                     b.Property<string>("Description");
 
                     b.Property<DateTimeOffset?>("EndDateTime");
+
+                    b.Property<bool>("IsAllowWaitList");
+
+                    b.Property<bool>("IsLimitVolunteers");
 
                     b.Property<string>("Name")
                         .IsRequired();
@@ -296,6 +304,8 @@ namespace AllReady.Migrations
                     b.Property<string>("Name")
                         .IsRequired();
 
+                    b.Property<string>("PrivacyPolicy");
+
                     b.Property<string>("WebUrl");
 
                     b.HasKey("Id");
@@ -375,6 +385,12 @@ namespace AllReady.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
+
+                    b.Property<string>("AdditionalInfo");
+
+                    b.Property<string>("PreferredEmail");
+
+                    b.Property<string>("PreferredPhoneNumber");
 
                     b.Property<string>("Status");
 

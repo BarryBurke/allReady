@@ -1,9 +1,8 @@
-﻿using AllReady.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
+using AllReady.Models;
 
 namespace AllReady.ViewModels
 {
@@ -11,7 +10,6 @@ namespace AllReady.ViewModels
     {
         public ActivityViewModel()
         {
-            this.Tasks = new List<TaskViewModel>();
         }
 
         public ActivityViewModel(Activity activity)
@@ -21,12 +19,18 @@ namespace AllReady.ViewModels
             {
                 CampaignId = activity.Campaign.Id;
                 CampaignName = activity.Campaign.Name;
+                TimeZoneId = activity.Campaign.TimeZoneId;
+                if (activity.Campaign.ManagingOrganization != null)
+                {
+                    OrganizationId = activity.Campaign.ManagingOrganization.Id;
+                    OrganizationName = activity.Campaign.ManagingOrganization.Name;
+                    HasPrivacyPolicy = !string.IsNullOrEmpty(activity.Campaign.ManagingOrganization.PrivacyPolicy);
+                }
             }
 
             Title = activity.Name;
             Description = activity.Description;
-
-            TimeZoneId = activity.Campaign.TimeZoneId;
+            ActivityType = activity.ActivityType;
             StartDateTime = activity.StartDateTime;
             EndDateTime = activity.EndDateTime;
 
@@ -44,7 +48,12 @@ namespace AllReady.ViewModels
                  ? new List<TaskViewModel>(activity.Tasks.Select(data => new TaskViewModel(data)).OrderBy(task => task.StartDateTime))
                  : new List<TaskViewModel>();
 
+            SignupModel = new ActivitySignupViewModel();
+
             RequiredSkills = activity.RequiredSkills?.Select(acsk => acsk.Skill).ToList();
+            IsLimitVolunteers = activity.IsLimitVolunteers;
+            IsAllowWaitList = activity.IsAllowWaitList;
+            
         }
 
         public int Id { get; set; }
@@ -53,13 +62,15 @@ namespace AllReady.ViewModels
         public int CampaignId { get; set; }
         public string CampaignName { get; set; }
         public string Title { get; set; }
+        public ActivityTypes ActivityType { get; set; }
         public string Description { get; set; }
         public string ImageUrl { get; set; }
         public string TimeZoneId { get; set; }
         public DateTimeOffset StartDateTime { get; set; }
         public DateTimeOffset EndDateTime { get; set; }
         public LocationViewModel Location { get; set; }
-        public List<TaskViewModel> Tasks { get; set; }
+        public List<TaskViewModel> Tasks { get; set; } = new List<TaskViewModel>();
+        public List<TaskViewModel> UserTasks { get; set; } = new List<TaskViewModel>();
         public bool IsUserVolunteeredForActivity { get; set; }
         public List<ApplicationUser> Volunteers { get; set; }
         public string UserId { get; set; }
@@ -68,13 +79,20 @@ namespace AllReady.ViewModels
         public int NumberOfVolunteersRequired { get; set; }
         public ActivitySignupViewModel SignupModel { get; set; }
         public bool IsClosed { get; set; }
+        public bool HasPrivacyPolicy { get; set; }
+        public List<ActivitySignup> UsersSignedUp { get; set; } = new List<ActivitySignup>();
+        public bool IsLimitVolunteers { get; set; } = true;
+        public bool IsAllowWaitList { get; set; } = true;
+        public int NumberOfUsersSignedUp => UsersSignedUp.Count;
+        public bool IsFull => NumberOfUsersSignedUp >= NumberOfVolunteersRequired;
+        public bool IsAllowSignups => !IsLimitVolunteers || !IsFull || IsAllowWaitList;
     }
 
     public static class ActivityViewModelExtension
     {
         public static LocationViewModel ToViewModel(this Location location)
         {
-            LocationViewModel value = new LocationViewModel()
+            var value = new LocationViewModel
             {
                 Address1 = location.Address1,
                 Address2 = location.Address2,
@@ -86,7 +104,7 @@ namespace AllReady.ViewModels
         }
         public static Location ToModel(this LocationViewModel location)
         {
-            Location value = new Location()
+            var value = new Location
             {
                 Address1 = location.Address1,
                 Address2 = location.Address2,
@@ -112,7 +130,9 @@ namespace AllReady.ViewModels
                 viewModel.UserSkills = appUser?.AssociatedSkills?.Select(us => us.Skill).ToList();
                 viewModel.IsUserVolunteeredForActivity = dataAccess.GetActivitySignups(viewModel.Id, userId).Any();
                 var assignedTasks = activity.Tasks.Where(t => t.AssignedVolunteers.Any(au => au.User.Id == userId)).ToList();
-                viewModel.Tasks = new List<TaskViewModel>(assignedTasks.Select(data => new TaskViewModel(data, userId)).OrderBy(task => task.StartDateTime));
+                viewModel.UserTasks = new List<TaskViewModel>(assignedTasks.Select(data => new TaskViewModel(data, userId)).OrderBy(task => task.StartDateTime));
+                var unassignedTasks = activity.Tasks.Where(t => t.AssignedVolunteers.All(au => au.User.Id != userId)).ToList();
+                viewModel.Tasks = new List<TaskViewModel>(unassignedTasks.Select(data => new TaskViewModel(data, userId)).OrderBy(task => task.StartDateTime));
                 viewModel.SignupModel = new ActivitySignupViewModel()
                 {
                     ActivityId = viewModel.Id,
@@ -124,7 +144,7 @@ namespace AllReady.ViewModels
             }
             else
             {
-                viewModel.Tasks = new List<TaskViewModel>();
+                viewModel.UserTasks = new List<TaskViewModel>();
             }
             return viewModel;
         }

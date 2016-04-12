@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Data.Entity;
 
 namespace AllReady.Models
@@ -16,8 +14,7 @@ namespace AllReady.Models
                 return _dbContext.Activities
                                 .Include(a => a.Location)
                                 .Include(a => a.Location.PostalCode)
-                                .Include(a => a.Campaign)
-                                .Include(a => a.Campaign.ManagingOrganization)
+                                .Include(a => a.Campaign).ThenInclude(c => c.ManagingOrganization)
                                 .Include(a => a.Tasks)
                                 .Include(a => a.RequiredSkills)
                                 .Include(a => a.UsersSignedUp)
@@ -52,9 +49,10 @@ namespace AllReady.Models
             return _dbContext.Activities
                 .Include(a => a.Location)
                 .Include(a => a.Location.PostalCode)
-                .Include(a => a.Campaign)
+                .Include(a => a.Campaign).ThenInclude(c => c.ManagingOrganization)
                 .Include(a => a.RequiredSkills).ThenInclude(rs => rs.Skill).ThenInclude(s => s.ParentSkill)
                 .Include(a => a.Tasks).ThenInclude(t => t.AssignedVolunteers).ThenInclude(tu => tu.User)
+                .Include(a => a.Tasks).ThenInclude(t => t.RequiredSkills).ThenInclude(ts => ts.Skill)
                 .Include(a => a.UsersSignedUp).ThenInclude(u => u.User)
                 .SingleOrDefault(a => a.Id == activityId);
         }
@@ -99,11 +97,10 @@ namespace AllReady.Models
 
             return finalTasks;
         }
+
         IEnumerable<Resource> IAllReadyDataAccess.GetResourcesByCategory(string category)
         {
-            var resources = from c in _dbContext.Resources
-                            select c;
-            return resources;
+            return _dbContext.Resources.Where(x => x.CategoryTag == category);
         }
 
         Task IAllReadyDataAccess.UpdateCampaign(Campaign value)

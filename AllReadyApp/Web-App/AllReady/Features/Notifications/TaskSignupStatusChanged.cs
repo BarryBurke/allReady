@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using MediatR;
+﻿using MediatR;
 
 namespace AllReady.Features.Notifications
 {
-    public class TaskSignupStatusChanged : INotification
+    public class TaskSignupStatusChanged : IAsyncNotification
     {
         public int SignupId { get; set; }
     }

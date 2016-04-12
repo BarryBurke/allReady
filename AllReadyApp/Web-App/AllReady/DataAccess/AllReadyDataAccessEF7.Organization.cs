@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
 using Microsoft.Data.Entity;
 
 namespace AllReady.Models
@@ -29,7 +27,7 @@ namespace AllReady.Models
                 _dbContext.Organizations.Remove(organization);
                 return _dbContext.SaveChangesAsync();
             }
-            return null;
+            return Task.FromResult(0);
         }
 
         Task IAllReadyDataAccess.UpdateOrganization(Organization value)
@@ -41,10 +39,10 @@ namespace AllReady.Models
                 _dbContext.Organizations.Update(organization);
                 return _dbContext.SaveChangesAsync();
             }
-            return null;
+            return Task.FromResult(0);
         }
 
-        IEnumerable<Organization> IAllReadyDataAccess.Organziations
+        IEnumerable<Organization> IAllReadyDataAccess.Organizations
         {
             get
             {

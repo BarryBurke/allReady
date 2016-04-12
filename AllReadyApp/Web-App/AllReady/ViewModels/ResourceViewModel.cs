@@ -1,9 +1,6 @@
-﻿using AllReady.Models;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+using AllReady.Models;
 
 namespace AllReady.ViewModels
 {
@@ -12,18 +9,19 @@ namespace AllReady.ViewModels
         public ResourceViewModel()
         {
         }
+
         public ResourceViewModel(Resource resource)
         {
-            this.Id = resource.Id;
-            this.Name = resource.Name;
-            this.Description = resource.Description;
-            this.PublishDateBegin = resource.PublishDateBegin;
-            this.PublishDateEnd = resource.PublishDateEnd;           
-            this.MediaUrl = resource.MediaUrl;
-            this.ResourceUrl = resource.ResourceUrl;
-            this.CategoryTag = resource.CategoryTag;
-            
+            Id = resource.Id;
+            Name = resource.Name;
+            Description = resource.Description;
+            PublishDateBegin = resource.PublishDateBegin;
+            PublishDateEnd = resource.PublishDateEnd;           
+            MediaUrl = resource.MediaUrl;
+            ResourceUrl = resource.ResourceUrl;
+            CategoryTag = resource.CategoryTag;
         }
+
         public int Id { get; set; }
 
         [Display(Name = "Resource name")]

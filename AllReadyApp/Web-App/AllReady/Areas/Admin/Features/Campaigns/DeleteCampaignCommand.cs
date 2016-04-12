@@ -1,13 +1,8 @@
-﻿using AllReady.Areas.Admin.Models;
-using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using MediatR;
 
 namespace AllReady.Areas.Admin.Features.Campaigns
 {
-    public class DeleteCampaignCommand : IRequest
+    public class DeleteCampaignCommand : IAsyncRequest
     {
         public int CampaignId {get; set;}
     }

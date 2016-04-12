@@ -1,32 +1,28 @@
-﻿using AllReady.Areas.Admin.Models;
-using AllReady.Features.Notifications;
-using AllReady.Models;
-using AllReady.ViewModels;
-using MediatR;
-using Microsoft.Data.Entity;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AllReady.Features.Notifications;
+using AllReady.Models;
+using MediatR;
+using Microsoft.Data.Entity;
 
 namespace AllReady.Areas.Admin.Features.Tasks
 {
-    public class TaskStatusChangeHandler : RequestHandler<TaskStatusChangeCommand>
+    public class TaskStatusChangeHandler : IAsyncRequestHandler<TaskStatusChangeCommand, TaskChangeResult>
     {
         private AllReadyContext _context;
-        private IMediator _bus;
+        private IMediator _mediator;
 
-        public TaskStatusChangeHandler(AllReadyContext context, IMediator bus)
+        public TaskStatusChangeHandler(AllReadyContext context, IMediator mediator)
         {
             _context = context;
-            _bus = bus;
+            _mediator = mediator;
         }
 
-        protected override void HandleCore(TaskStatusChangeCommand message)
+        public async Task<TaskChangeResult> Handle(TaskStatusChangeCommand message)
         {
-            var task = _context.Tasks
-                .Include(t => t.AssignedVolunteers).ThenInclude((TaskSignup ts) => ts.User)
-                .SingleOrDefault(c => c.Id == message.TaskId);
+            var task = await GetTask(message).ConfigureAwait(false);
+
             if (task == null)
                 throw new InvalidOperationException($"Task {message.TaskId} does not exist");
 
@@ -35,7 +31,7 @@ namespace AllReady.Areas.Admin.Features.Tasks
                 throw new InvalidOperationException($"Sign-up for user {message.UserId} does not exist");
 
             TaskStatus currentStatus;
-            if (!Enum.TryParse<TaskStatus>(taskSignup.Status, out currentStatus))
+            if (!Enum.TryParse(taskSignup.Status, out currentStatus))
                 currentStatus = TaskStatus.Assigned;
 
             switch (message.TaskStatus)
@@ -43,8 +39,8 @@ namespace AllReady.Areas.Admin.Features.Tasks
                 case TaskStatus.Assigned:
                     break;
                 case TaskStatus.Accepted:
-                    if (currentStatus != TaskStatus.Assigned)
-                        throw new ArgumentException($"Task must be assigned before being accepted");
+                    if (currentStatus != TaskStatus.Assigned && currentStatus != TaskStatus.CanNotComplete && currentStatus != TaskStatus.Completed) 
+                        throw new ArgumentException($"Task must be assigned before being accepted or undoing CanNotComplete or Completed");
                     break;
                 case TaskStatus.Rejected:
                     if (currentStatus != TaskStatus.Assigned)
@@ -65,10 +61,28 @@ namespace AllReady.Areas.Admin.Features.Tasks
             taskSignup.Status = message.TaskStatus.ToString();
             taskSignup.StatusDateTimeUtc = DateTime.UtcNow;
             taskSignup.StatusDescription = message.TaskStatusDescription;
-            _context.SaveChanges();
+
+            await _context.SaveChangesAsync().ConfigureAwait(false);
 
             var notification = new TaskSignupStatusChanged { SignupId = taskSignup.Id };
-            _bus.Publish(notification);
+            await _mediator.PublishAsync(notification).ConfigureAwait(false);
+            
+            return new TaskChangeResult { Status = "success", Task = task };
         }
+
+        private async Task<AllReadyTask> GetTask(TaskStatusChangeCommand message)
+        {
+            return await _context.Tasks
+                .Include(t => t.AssignedVolunteers).ThenInclude(ts => ts.User)
+                .Include(t => t.RequiredSkills).ThenInclude(s => s.Skill)
+                .SingleOrDefaultAsync(c => c.Id == message.TaskId)
+                .ConfigureAwait(false);
+        }
+    }
+
+    public class TaskChangeResult
+    {
+        public string Status { get; set; }
+        public AllReadyTask Task { get; set; }
     }
 }

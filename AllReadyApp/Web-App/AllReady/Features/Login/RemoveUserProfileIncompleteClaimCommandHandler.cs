@@ -1,7 +1,7 @@
-﻿using AllReady.Models;
+﻿using System.Threading.Tasks;
+using AllReady.Models;
 using MediatR;
 using Microsoft.Data.Entity;
-using System.Threading.Tasks;
 
 namespace AllReady.Features.Login
 {
@@ -14,14 +14,14 @@ namespace AllReady.Features.Login
             _context = context;
         }
 
-        protected async override Task HandleCore(RemoveUserProfileIncompleteClaimCommand message)
+        protected override async Task HandleCore(RemoveUserProfileIncompleteClaimCommand message)
         {
             //Going directly to the database here to remove the claim instead of using the UserManager because the user isn't always logged in (eg. when confirming email address)
-            var existingClaim = await _context.UserClaims.SingleOrDefaultAsync(u => u.UserId == message.UserId && u.ClaimType == Security.ClaimTypes.ProfileIncomplete);
+            var existingClaim = await _context.UserClaims.SingleOrDefaultAsync(u => u.UserId == message.UserId && u.ClaimType == Security.ClaimTypes.ProfileIncomplete).ConfigureAwait(false);
             if (existingClaim != null)
             {
                 _context.Remove(existingClaim);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync().ConfigureAwait(false);
             }
         }
     }
